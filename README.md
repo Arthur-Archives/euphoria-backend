@@ -130,6 +130,7 @@ GitHub URLs.
 - `GET /docs`
 - `GET /public/*`
 - `GET /stats`
+- `POST /telemetry/panel`
 - `GET /products`
 - `GET /donators`
 - `GET /contributors`
@@ -144,6 +145,20 @@ GitHub URLs.
 - `GET /rcon/health`
 - `POST /rcon/variables`
 - `POST /rcon/players`
+
+### Aquadactyl panel telemetry
+
+The optional panel telemetry endpoint accepts one aggregate report per
+installation and retains the latest report for 90 days. It requires a bearer
+token and is disabled until `PANEL_TELEMETRY_TOKEN` is configured:
+
+```env
+PANEL_TELEMETRY_TOKEN=replace-with-a-long-random-token
+```
+
+The panel sends only an installation UUID, software/driver versions, Docker
+availability, and aggregate resource counts. It must not send user identity,
+network addresses, domains, server names, credentials, or request contents.
 
 ## API Docs (Scalar)
 

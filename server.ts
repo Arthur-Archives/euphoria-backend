@@ -22,6 +22,7 @@ import teamRoutes from "./routes/team.js";
 import versionsRoutes from "./routes/versions.js";
 import statsRoutes from "./routes/stats.js";
 import rconRoutes from "./routes/rcon.js";
+import telemetryRoutes from "./routes/telemetry.js";
 
 dotenv.config({ quiet: true });
 
@@ -208,6 +209,7 @@ let activeLogStream = null;
 let isShuttingDown = false;
 
 app.decorate("getApiRequestCount", () => apiRequestCount);
+app.decorate("redis", redis);
 
 // Serialize access log stream rotation across concurrent requests.
 let accessLogMutex = Promise.resolve();
@@ -445,6 +447,7 @@ await app.register(teamRoutes, { prefix: "/team" });
 await app.register(versionsRoutes, { prefix: "/versions" });
 await app.register(statsRoutes, { prefix: "/stats" });
 await app.register(rconRoutes, { prefix: "/rcon" });
+await app.register(telemetryRoutes, { prefix: "/telemetry" });
 
 app.get("/", async (request) => ({
   ok: true,

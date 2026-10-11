@@ -33,6 +33,7 @@ export function createOpenApiDocument(baseUrl) {
       { name: "Donators" },
       { name: "Versions" },
       { name: "RCON" },
+      { name: "Telemetry" },
     ],
     paths: {
       "/": {
@@ -76,6 +77,37 @@ export function createOpenApiDocument(baseUrl) {
             200: {
               description: "Products list",
             },
+          },
+        },
+      },
+      "/telemetry/panel": {
+        post: {
+          tags: ["Telemetry"],
+          summary: "Receive opt-in Aquadactyl panel telemetry",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["schema", "instanceId", "panel"],
+                  properties: {
+                    schema: { type: "integer", enum: [1] },
+                    instanceId: { type: "string", format: "uuid" },
+                    panel: { type: "object" },
+                    resources: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            202: { description: "Telemetry accepted" },
+            400: { description: "Invalid telemetry payload" },
+            401: { description: "Invalid token" },
+            404: { description: "Telemetry is not configured" },
+            413: { description: "Payload too large" },
           },
         },
       },
@@ -356,6 +388,14 @@ export function createOpenApiDocument(baseUrl) {
               description: "Normalized player response",
             },
           },
+        },
+      },
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
         },
       },
     },
