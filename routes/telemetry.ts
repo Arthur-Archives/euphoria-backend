@@ -28,20 +28,6 @@ export default async function registerTelemetryRoutes(app) {
       },
     },
     async (request, reply) => {
-      const telemetryToken = String(
-        process.env.PANEL_TELEMETRY_TOKEN || "",
-      ).trim();
-      if (!telemetryToken) {
-        return reply.code(404).send({ success: false, error: "Not found" });
-      }
-
-      const authorization = String(
-        request.headers.authorization || "",
-      ).replace(/^Bearer\s+/i, "");
-      if (authorization !== telemetryToken) {
-        return reply.code(401).send({ success: false, error: "Unauthorized" });
-      }
-
       if (Buffer.byteLength(JSON.stringify(request.body || {}), "utf8") > MAX_PAYLOAD_BYTES) {
         return reply.code(413).send({ success: false, error: "Payload too large" });
       }

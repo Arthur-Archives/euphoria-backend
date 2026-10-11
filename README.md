@@ -149,12 +149,10 @@ GitHub URLs.
 ### Aquadactyl panel telemetry
 
 The optional panel telemetry endpoint accepts one aggregate report per
-installation and retains the latest report for 90 days. It requires a bearer
-token and is disabled until `PANEL_TELEMETRY_TOKEN` is configured:
-
-```env
-PANEL_TELEMETRY_TOKEN=replace-with-a-long-random-token
-```
+installation and retains the latest report for 90 days. It is intentionally
+publicly ingestible so ordinary panel installations do not need a secret token.
+The endpoint validates the payload schema, limits payload size, rate-limits
+requests, and stores one snapshot per anonymous installation UUID.
 
 The panel sends only an installation UUID, software/driver versions, Docker
 availability, and aggregate resource counts. It must not send user identity,

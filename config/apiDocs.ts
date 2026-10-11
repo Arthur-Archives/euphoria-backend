@@ -84,7 +84,6 @@ export function createOpenApiDocument(baseUrl) {
         post: {
           tags: ["Telemetry"],
           summary: "Receive opt-in Aquadactyl panel telemetry",
-          security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
             content: {
@@ -105,8 +104,6 @@ export function createOpenApiDocument(baseUrl) {
           responses: {
             202: { description: "Telemetry accepted" },
             400: { description: "Invalid telemetry payload" },
-            401: { description: "Invalid token" },
-            404: { description: "Telemetry is not configured" },
             413: { description: "Payload too large" },
           },
         },
@@ -388,14 +385,6 @@ export function createOpenApiDocument(baseUrl) {
               description: "Normalized player response",
             },
           },
-        },
-      },
-    },
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
         },
       },
     },
