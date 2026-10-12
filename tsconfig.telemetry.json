@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noCheck": false, "strict": true, "noEmit": true },
+  "include": [
+    "config/telemetry*.ts",
+    "routes/telemetry.ts",
+    "scripts/*Telemetry*.ts",
+    "scripts/importTelemetry.ts",
+    "scripts/telemetry*.ts",
+    "tests/telemetry*.ts"
+  ]
+}

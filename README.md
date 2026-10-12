@@ -148,11 +148,20 @@ GitHub URLs.
 
 ### Aquadactyl panel telemetry
 
-The optional panel telemetry endpoint accepts one aggregate report per
-installation and retains the latest report for 90 days. It is intentionally
-publicly ingestible so ordinary panel installations do not need a secret token.
-The endpoint validates the payload schema, limits payload size, rate-limits
-requests, and stores one snapshot per anonymous installation UUID.
+The optional panel telemetry endpoint is publicly ingestible so ordinary panel
+installations do not need a secret token. It validates and retains only approved
+aggregate fields, limits payload size, and rate-limits requests.
+
+Configure `TELEMETRY_DATABASE_URL` to retain the latest report plus one snapshot
+per installation per UTC day in PostgreSQL, with 90 days of retention by
+default. The private Metabase dashboard shows reporting installations, reported
+resource counts, version distributions, Docker usage, daily trends, and last
+contact. Its database account can only read reporting views. Without PostgreSQL
+configuration, the existing Redis-only latest-report receiver remains available.
+
+See **[Telemetry dashboard setup](docs/TELEMETRY.md)** for the Linux deployment,
+local Docker preview, generated login credentials, optional Redis import, and
+validation commands. The panel's submission URL and opt-in behavior are unchanged.
 
 The panel sends only an installation UUID, software/driver versions, Docker
 availability, and aggregate resource counts. It must not send user identity,

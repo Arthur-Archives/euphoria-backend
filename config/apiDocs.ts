@@ -105,6 +105,8 @@ export function createOpenApiDocument(baseUrl) {
             202: { description: "Telemetry accepted" },
             400: { description: "Invalid telemetry payload" },
             413: { description: "Payload too large" },
+            429: { description: "Telemetry rate limit exceeded" },
+            503: { description: "Telemetry storage unavailable" },
           },
         },
       },

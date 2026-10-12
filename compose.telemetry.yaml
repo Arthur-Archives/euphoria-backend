@@ -1,0 +1,102 @@
+name: euphoria-telemetry
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: telemetry
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run pnpm telemetry:init first}
+      TELEMETRY_WRITER_PASSWORD: ${TELEMETRY_WRITER_PASSWORD:?Missing writer password}
+      TELEMETRY_READER_PASSWORD: ${TELEMETRY_READER_PASSWORD:?Missing reader password}
+      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD:?Missing Metabase database password}
+    ports:
+      - "127.0.0.1:${TELEMETRY_DATABASE_PORT:-55432}:5432"
+    volumes:
+      - telemetry-data:/var/lib/postgresql/data
+      - ./deploy/telemetry/init-database.sh:/docker-entrypoint-initdb.d/10-telemetry.sh:ro
+      - ./deploy/telemetry:/telemetry:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d telemetry"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  metabase:
+    image: metabase/metabase:v0.64.1
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${METABASE_PORT:-3013}:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: postgres
+      MB_DB_PORT: "5432"
+      MB_DB_DBNAME: metabase
+      MB_DB_USER: metabase_app
+      MB_DB_PASS: ${METABASE_DB_PASSWORD:?Missing Metabase database password}
+      MB_ENCRYPTION_SECRET_KEY: ${METABASE_ENCRYPTION_SECRET_KEY:?Missing encryption key}
+      MB_SITE_URL: ${METABASE_SITE_URL:-http://localhost:3013}
+      MB_ANON_TRACKING_ENABLED: "false"
+      MB_ENABLE_PUBLIC_SHARING: "false"
+      MB_ENABLE_EMBEDDING: "false"
+      MB_REPORT_TIMEZONE: UTC
+      JAVA_TIMEZONE: UTC
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "--silent",
+          "http://localhost:3000/api/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 40
+  setup:
+    image: node:24-alpine
+    depends_on:
+      metabase:
+        condition: service_healthy
+    working_dir: /setup
+    volumes:
+      - ./scripts/setupTelemetry.mjs:/setup/setupTelemetry.mjs:ro
+    environment:
+      METABASE_URL: http://metabase:3000
+      METABASE_SITE_URL: ${METABASE_SITE_URL:-http://localhost:3013}
+      METABASE_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:?Missing admin email}
+      METABASE_ADMIN_PASSWORD: ${METABASE_ADMIN_PASSWORD:?Missing admin password}
+      TELEMETRY_READER_PASSWORD: ${TELEMETRY_READER_PASSWORD:?Missing reader password}
+    command: ["node", "setupTelemetry.mjs"]
+    restart: "no"
+  preview-api:
+    profiles: [preview]
+    build:
+      context: .
+      dockerfile: deploy/telemetry/Dockerfile
+    image: euphoria-telemetry-preview:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${TELEMETRY_PREVIEW_PORT:-3014}:3000"
+    environment:
+      TELEMETRY_DATABASE_URL: postgres://telemetry_ingest:${TELEMETRY_WRITER_PASSWORD}@postgres:5432/telemetry
+      TELEMETRY_RETENTION_DAYS: ${TELEMETRY_RETENTION_DAYS:-90}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+volumes:
+  telemetry-data:
